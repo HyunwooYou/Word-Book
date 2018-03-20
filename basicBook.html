@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+ <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>My Word Book</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"> </script>
+<!-- Latest CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+
+<!-- Additional Thema-->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css" />
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+<script>				
+	
+	
+	/* * * * * * * *  Global Variable  * * * * * * * */	
+	
+	var book; 		// Json type book which includes Words.
+	var bookArray; 	// Word book array.  		 
+	var bookIndex;	// Index of book. 		
+	
+	
+	
+		
+	/* * * * * * * *  Word Object  * * * * * * * */
+	
+	function Word(word, meaning) {
+		this.word = word; 		// English Word. 
+		this.meaning = meaning; // Korean Meaning. 
+		this.count = 0;			// Wrong Frequency. 
+	}
+	
+	
+		
+	
+	/* * * * * * * *  Entry Point  * * * * * * * */
+	
+	$(function() {								
+		bookIndex = -1;		
+		
+		if(localStorage.getItem("book")) {		
+			book = JSON.parse(localStorage.getItem("book"));
+			bookArray = Object.values(book); 
+			
+			console.log("Bring book from localstorage.");
+		}else {
+			book = new Object();			
+			localStorage.setItem("book", JSON.stringify(book));
+			
+			console.log("Make new book.");
+		}			
+		
+		// If word input is Entered, focus is moved to meaning input. 
+		$('#word').keypress(function (event) {			
+			if(event.which == 13) {
+				$('#meaning').focus();	
+			}			 
+	    });
+		
+		// If meaning input is Entered, Add function is executed. 
+		$('#meaning').keypress(function (event) {
+			if(event.which == 13) {
+				addWordToBook();
+				$('#word').focus();
+			}
+	    });
+		
+		// Detect all keyboard event. 
+		$(document).keydown(function(event) {			
+			
+			switch(event.keyCode) {
+			case 17 : // Ctrl
+				shuffleBook();
+				break;
+			case 32 : // Space bar. 
+				resetTest(); 
+				break; 
+			case 37 : // Left arrow 
+				beforeWord(); 							
+				break;
+			case 38 : // Up arrow
+				console.log("UP");				
+				break;
+			case 39 : // Right arrow
+				afterWord(); 					
+				break;
+			case 40 : // Down arrow
+				console.log("DOWN");				
+				break;															
+			}		  
+		});				
+	
+		showBook(); 		
+	});		
+		
+	
+	
+	
+	/* * * * * * * *  View  * * * * * * * */
+	
+	// EVENT : Refresh view. 
+	function refreshView() {				
+		$('#testDiv').empty(); 			
+		$('#tableBody').empty(); 
+		showBook(); 
+	}
+	
+	// EVENT : Show book. 
+	function showBook() {												
+		for(var i=0; i<bookArray.length; i++) {
+			var x = bookArray[i]; 				
+			$('#tableBody').append(
+				"<tr>" + 
+					"<td id=\"wordInTable\" class=\"col-xs-4\">" + x.word + "</td>" +  
+					"<td class=\"col-xs-4\">" + x.meaning + "</td>" +
+					"<td class=\"col-xs-2\">" + x.count + "</td>" +
+					"<td id=\"deleteInTable\" class=\"col-xs-1\" style=\"color:#E7A5A3;\"> X </td>" +						
+				"</tr>"
+			);			
+		}		
+		
+		console.log("Show book.");
+	}
+	
+
+	// EVENT : Delete word in showContent class.
+	$(document).on('click', '#deleteInTable', function() {	                
+        var tr = $(this).parent();
+        
+        var delKey = tr.children('#wordInTable').text();
+       	console.log(delKey);        
+        
+		delete book[delKey];
+				
+		refreshBook();
+		refreshView(); 		 			
+		bookIndex = -1;			
+		        
+	    console.log(delKey + " is deleted in show Content.");
+	});
+	
+	
+	
+	
+	/* * * * * * * *  Book  * * * * * * * */			
+	
+	// ACTION : Add word to book.  
+	function addWordToBook() {
+		var wordVal=$('#word').val();
+		var meaningVal=$('#meaning').val();		
+		var key = wordVal;	
+		
+		book[key] = new Word(wordVal, meaningVal);						
+		
+		$('#word').val("");
+		$('#meaning').val("");		 			
+		
+		refreshBook();
+		refreshView();		
+		bookIndex = -1;
+		
+		console.log("Add " + wordVal);
+	}		
+	
+	// ACTION : Delete word in book. 
+	function delWordInBook() {
+		var delKey = $('#delKey').val();
+		
+		if(book[delKey]) {
+			delete book[delKey];			
+			alert(delKey + " is deleted.");
+			
+			console.log("Delete " + delKey);
+		}else {
+			alert("Not Exists.");
+			
+			console.log("There is no " + delKey);
+		}					
+		
+		$('#delKey').val("");		
+		refreshBook();
+		refreshView();
+	}	
+
+	
+	
+			
+	/* * * * * * * *  LocalStorage  * * * * * * * */
+	
+	// EVENT : Refresh Book. 
+	function refreshBook() {
+		localStorage.clear(); 
+		localStorage.setItem("book", JSON.stringify(book));
+		bookArray = Object.values(book); 
+		
+		console.log("Refresh book.");
+	}
+	
+	// EVENT : Clear book in localStorage. 
+	function clearBookInLocalStorage() {		
+		book = new Object();
+		
+		refreshBook();
+		refreshView();
+		
+		alert("Clear Book.");
+		console.log("-----------clear book-----------");
+	}
+		
+	
+	
+		
+	/* * * * * * * *  Do Test  * * * * * * * */
+	
+	// EVENT : Search before word. 
+	function beforeWord() {		
+		refreshView();
+		
+		if(bookIndex > 0) bookIndex --;												
+		var x = bookArray[bookIndex];							
+	
+		$('#testDiv').append(
+			"<span class=\"col-md-4\">" +
+				"<button onclick=\"increaseCount();\" class=\"btn btn-secondary\" style=\"width:80px; margin-top:10px;\">" +
+					"Check" + 
+				"</button>" + 
+				"<button id=\"meaning\" value=\"" + x.meaning + "\" class=\"btn btn-secondary\" style=\"width:80px; margin-top:10px;\">" +
+					"Meaning" + 
+				"</button>" + 
+			"</span>" + 
+			
+			"<div class=\"col-md-4\" style=\"margin-top:8px;\">" +
+				"<div id=\"testWord\" style=\"font-size:22px; font-weight:bold;\">" + 
+					x.word + 
+				"</div>" +
+				"<div id=\"testMeaning\">" +
+				
+				"</div>" + 
+			"</div>"  			
+		);			
+		
+		console.log("Before word.");
+	}
+	
+	// EVENT : Search next word. 
+	function afterWord() {		
+		refreshView();
+			
+		if(bookIndex < bookArray.length - 1) bookIndex ++;												
+		var x= bookArray[bookIndex];
+		
+		$('#testDiv').append(
+			"<span class=\"col-md-4\">" +
+				"<button onclick=\"increaseCount();\" class=\"btn btn-secondary\" style=\"width:80px; margin-top:10px;\">" +
+					"Check" + 
+				"</button>" + 
+				"<button id=\"meaning\" value=\"" + x.meaning + "\" class=\"btn btn-secondary\" style=\"width:80px; margin-top:10px;\">" +
+					"Meaning" + 
+				"</button>" + 
+			"</span>" +
+			
+			"<div class=\"col-md-4\" style=\"margin-top:8px;\">" +
+				"<div id=\"testWord\" style=\"font-size:22px; font-weight:bold;\">" + 
+					x.word + 
+				"</div>" +
+				"<div id=\"testMeaning\">" +
+				
+				"</div>" + 
+			"</div>"			
+		);		
+		
+		console.log("Next word.");			
+	}	
+	
+	// EVENT : Increase word count. 
+	function increaseCount() {
+		var key = $('#testWord').text();			
+				
+		book[key].count = book[key].count + 1; 		
+		
+		$('#tableBody').empty();
+		refreshBook(); 
+		showBook();		
+		
+		console.log(bookArray[bookIndex].word + "'count is increased.");
+	}	
+
+	// EVENT : Show meaning during test.
+	$(document).on('click', '#meaning', function showMeaning() {
+		var testMeaning = $(this).attr('value');			
+		
+		if($('#testMeaning').children().length < 1) {
+			$('#testMeaning').append(
+				"<p style=\"margin-top:18px; font-size:16px;\">" 
+					+ testMeaning +
+				"</p>"
+			);				
+		}		
+			
+		console.log("Show meaning.");
+	});	
+		
+	// EVENT : Reset test span. 	
+	function resetTest() {				 
+		 $('#testDiv').empty();
+		 this.bookIndex = -1;
+		 
+		console.log("Reset Test.");
+	}
+		
+	
+	
+	
+	/* * * * * * * *  Shuffle Book  * * * * * * * */
+	
+	// EVENT : Shuffle book. 
+	function shuffleBook() {
+		$('#testDiv').empty(); 
+		// Change json book to array book.		
+		var j, x, i;
+	    for (i = bookArray.length; i; i -= 1) {
+	        j = Math.floor(Math.random() * i);
+	        x = bookArray[i - 1];
+	        bookArray[i - 1] = bookArray[j];
+	        bookArray[j] = x;
+	    }	    	   	    	    	
+						
+		this.bookIndex = -1;
+		refreshView();		
+		
+		console.log("Shuffle Book.");			
+	}	
+				
+</script>
+
+<style>
+
+.container {
+	width: 85%;
+}
+
+/* Header */
+header {		
+	margin-top: 100px; 
+	padding: 5px;
+	border-bottom-style: solid;	
+	border-color: #2F5597;
+}
+
+#title {
+	font-size:40px; 
+	font-weight: bold; 
+	color: #2F5591; 
+}
+
+#headerBtn {
+	float:right; 
+	margin-top:15px;
+	
+}
+
+#leftContent, #rightContent {
+	margin-top: 40px; 
+	margin-left: 27px;	
+}
+
+#addWord {
+	margin-bottom:20px;
+}
+
+#doTest {
+	margin-top: 100px;
+}
+
+#testDiv {	
+	margin-bottom: 20px;
+	width: 100%; 
+	height: 100px;
+	/* border-style: solid;	
+	border-color: #2F5597; */	
+}
+
+.row.content {
+	height: 460px
+}
+
+
+/* Set black background color, white text and some padding */
+
+footer {	
+	color: white;
+	border-bottom-style: solid;	
+	border-color: #2F5597;
+}
+
+/* On small screens, set height to 'auto' for sidenav and grid */
+@media screen and (max-width: 767px) {
+	.row.content {
+		height: auto;
+	}
+}
+
+.glyphicon {
+    font-size: 22px;
+}
+
+
+/* Table */ 
+.table-fixed thead {
+  width: 97%;
+}
+
+.table-fixed tbody {	
+  height: 325px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
+  display: block;
+}
+
+.table-fixed tbody td, .table-fixed thead > tr> th {
+  float: left;
+  border-bottom-width: 0;
+}
+
+.descTitle {
+	font-weight: bold;
+}
+</style>
+
+</head>
+<body>
+	<div class="container">
+		<header>
+			<span id="title">Word Book</span>	
+			<span id="headerBtn">
+				<button onclick="shuffleBook();" class="btn btn-primary">Shuffle</button>
+				<button onclick="clearBookInLocalStorage();" class="btn btn-warning" style="margin-left:10px;">Clear All</button>
+				<button class="btn btn-default" data-toggle="modal" data-target=".bd-example-modal-lg" style="margin-left:10px;">Description</button>				
+			</span>					
+		</header>
+
+		<div class="row content">
+			<div id="leftContent" class="col-sm-5">
+				<div id="addWord">
+					<div style="margin-bottom:20px;">
+						<span class="glyphicon glyphicon-plus-sign"></span> 
+						<span style="font-size: 30px; margin-left: 20px;">Add word</span>
+					</div>
+
+					<div class="col-md-6 col-sm-5 col-xs-12 gutter">
+						<input id="word" placeholder="English" type="text" class="form-control" />
+					</div>
+
+					<div class="col-md-6 col-sm-5 col-xs-12 gutter">
+						<input id="meaning" placeholder="Meaning" type="text" class="form-control" />
+					</div>
+				</div>
+
+				<div id="doTest">
+					<div style="margin-bottom: 20px;">
+						<span class="glyphicon glyphicon-pencil"></span> 
+						<span style="font-size: 30px; margin-left: 20px;">Do Test</span>
+					</div>
+					
+					<div id="testDiv">
+								
+					</div>
+					
+					<button onclick="resetTest();" class="btn btn-info" style="margin-left:16px; width:20%; font-weight:bold;">Reset</button>
+					<span class="glyphicon glyphicon-chevron-left" style="margin-left:30px;"></span>
+					<button onclick="beforeWord();" class="btn btn-primary" style="font-weight:bold; width:25%;">Previous</button>					
+					<button onclick="afterWord();" class="btn btn-primary" style="margin-left:10px; width:20%; font-weight:bold;">Next</button>									
+					 
+					<span class="glyphicon glyphicon-chevron-right"></span>					
+				</div>
+			</div>
+
+			<div id="rightContent" class="col-sm-6">
+				<div class="row">								
+					<table class="table table-fixed">
+						<thead>
+							<tr style="font-size:15px;">															
+								<th class="col-xs-4">English</th>
+								<th class="col-xs-4">Meaning</th>
+								<th class="col-xs-2">Check</th>									
+								<th class="col-xs-1">Delete</th>									
+							</tr>
+						</thead>
+						<tbody id="tableBody">														
+																
+						</tbody>
+					</table>			
+				</div>						
+			</div>
+		</div>
+
+		<footer>		
+			
+		</footer>
+			
+		<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg" style="width:45%;">
+				<div class="modal-content" style="padding:20px; font-size:20px;">					
+					<h1 style="font-weight:bold; text-align:center;">Description</h1> <br>										
+						<span>It only works in <span style="color:red; ">Chrome</span></span>
+						<br><br>
+						
+						<span class="descTitle">* How to add word?</span> <br>
+						<span style="font-size:17px;"> 						
+						1. Write english and then (Enter). <br>
+						2. Write meaning and then (Enter). <br> 
+						3. Complete to add word. <br><br>
+						</span> 									
+																	
+						<span class="descTitle">1. Shuffle [ Ctrl ] : </span>
+						Reconstitute word book randomly. <br><br>
+						
+						<span class="descTitle">2. Clear All : </span>																
+						Remove all contents in word book. <br><br>						
+						
+						<span class="descTitle">3. Reset [ Space Bar ] : </span>
+						Remove test scope. <br><br>						
+						
+						<span class="descTitle">4. Check : </span>
+						Note that "I don't know." <br><br>											
+						
+						<span class="descTitle">5. Meaning : </span>
+						Show the meaning of test word. <br><br>						
+						
+						<span class="descTitle">6. Previous [ Left Arrow ] : </span>
+						See previous word. <br><br>						
+						
+						<span class="descTitle">7. Next [ Right Arrow ] : </span>
+						Start test or see next word. <br><br>						
+				</div>
+			</div>
+		</div>
+	</div>	
+</body>
+</html>
