@@ -3,23 +3,17 @@ This README would normally document whatever steps are necessary to get the appl
 
 Things you may want to cover:
 
-* Spring Boot
+* Local Storage
 
-* Ruby on Rails
+* JavaScript & JQuery 
 
-* System dependencies
+* Bootstrap 
 
-* Configuration
+* CSS
 
-* Database initialization
+* HTML 
 
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-We developed the server and client parts using different frameworks. Social-Scheduler is a server and Social-Sheduler-Client is a client. The part I developed is the server part.
+It only words in Chrome. 
 
 Click Wiki for a more detailed project description 
 
